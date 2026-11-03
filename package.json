@@ -4,6 +4,6 @@
   "private": true,
   "scripts": {
     "check": "node --check dist/app.js",
-    "test": "node tests/logic.test.cjs && node tests/security.test.cjs"
+    "test": "node tests/logic.test.cjs && node tests/security.test.cjs && node tests/cloud-codec.test.mjs"
   }
 }
