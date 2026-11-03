@@ -1,0 +1,10 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Preparation only: remain closed until Authentication and per-user rules
+    // have been implemented and tested against the selected Firebase project.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

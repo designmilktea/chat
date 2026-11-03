@@ -1,0 +1,9 @@
+{
+  "name": "private-chat-records",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "check": "node --check dist/app.js",
+    "test": "node tests/logic.test.cjs && node tests/security.test.cjs"
+  }
+}

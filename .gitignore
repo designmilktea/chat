@@ -1,0 +1,12 @@
+node_modules/
+.env
+.env.*
+!.env.example
+.firebase/
+*.log
+*.tar.gz
+*service-account*.json
+*serviceAccount*.json
+*firebase-adminsdk*.json
+backups/
+exports/
