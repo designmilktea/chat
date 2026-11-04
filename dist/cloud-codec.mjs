@@ -1,6 +1,6 @@
 // Small per-entity documents preserve ordering and parent relationships.
 export function encodeRecords(db) {
- const records=new Map();const put=(key,kind,value)=>records.set(key,{kind,body:JSON.stringify(value)});
+ const records=new Map();const put=(key,kind,value)=>{if(records.has(key))throw Error('紀錄識別碼重複，已停止同步');records.set(key,{kind,body:JSON.stringify(value)})};
  put('meta','meta',{version:db.version,...(db.seededAt?{seededAt:db.seededAt}:{})});
  db.categories.forEach((c,index)=>put('category:'+c.id,'category',{...c,index}));
  db.chats.forEach(({messages,...c},index)=>{put('chat:'+c.id,'chat',{...c,index});messages.forEach(({thoughts,...m},index)=>{put('message:'+m.id,'message',{...m,chatId:c.id,index});thoughts.forEach(({hypotheses,...t},index)=>{put('thought:'+t.id,'thought',{...t,messageId:m.id,index});hypotheses.forEach((h,index)=>put('hypothesis:'+h.id,'hypothesis',{...h,thoughtId:t.id,index}))})})});
