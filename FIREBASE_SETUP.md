@@ -1,22 +1,28 @@
 # Firebase 接入狀態
 
-目前 Firebase 尚未連線，所有紀錄仍只存在原本瀏覽器。此專案的 firebase.json 與 firestore.rules 是部署準備檔，沒有指定專案，也沒有部署至 Firebase。
+專案：chat-records-683bb。方案：免費 Spark。Firestore：(default)，Standard，asia-east1（Taiwan）。Web App：chat-web。
 
-## 接入時需要的資訊
+## 已完成設定
 
-- Firebase Project ID。
-- 已註冊 Web App 的公開 Firebase configuration（apiKey、authDomain、projectId、appId 等）。Firebase Web configuration 是用於識別專案的前端設定，不能當作資料庫的存取權限。
-- Firebase Console 中啟用 Google 登入，並確認允許的網站網域。
+Firebase Console 已完成專案、Web App、Google 登入與既有網站網域授權。Firestore 已在使用者同意後建立於台灣，使用正式環境模式；已發布 firestore.rules 中每個 UID 各自隔離的規則。規則測試區已驗證未登入讀取拒絕、不同 UID 讀取與寫入拒絕、擁有者讀取與有效寫入允許。這些是模擬測試，沒有新增真實測試文件。
 
-請勿將服務帳號 JSON、私鑰、管理端憑證或個人聊天紀錄加入 repository。
+## 網站使用流程
 
-## 執行順序
+1. 開啟「雲端儲存」，使用 Google 登入。
+2. 選「使用雲端紀錄」可載入此帳號的雲端資料；第一次使用時建立空白紀錄空間。
+3. 若要搬移此瀏覽器原本紀錄，選「匯入原本的本機紀錄」。系統先下載 JSON 備份，再顯示筆數與目的帳號，確認後才匯入。帳號已有雲端紀錄時會停止，避免覆蓋。
+4. 啟用後，編輯會先保存在該 UID 的本機快取，再同步到 Firestore。只有收到雲端成功回覆才顯示「已同步至雲端」。
+5. 離線或版本衝突時保留本機資料，停止自動重試覆蓋。可匯出備份、立即同步或重新載入。登出後隱藏帳號紀錄，重新登入再載入；不同 UID 使用不同快取鍵。
 
-1. 確認 Firebase 專案、地區與 Google 登入設定。
-2. 接入模組化 Web SDK，調整現有 CSP 的 connect-src/script-src 以允許實際需要的 Firebase 登入與資料端點，避免移除整份 CSP。
-3. 按登入 UID 隔離 categories、chats、messages、thoughts、hypotheses；各筆資料保留目前的穩定 ID、附著關係和順序。
-4. 使用 Emulator 測試未登入、其他 UID、無效欄位、批次操作與軟刪除。現有 firestore.rules 故意拒絕所有存取，需先完成並驗證正式規則。
-5. 提供使用者主動啟動的本機資料匯入：先下載備份、核對筆數，雲端確認寫入成功後才顯示完成。不自動刪除原本資料。
-6. 完成同步失敗、離線重連、衝突與跨帳號測試後，再部署雲端整合版本。
+## 實作與限制
 
-Firebase Hosting 公開與否、GitHub repository 公開與否、個人資料讀取權限是各自獨立的設定。
+- 不會自動把原本本機紀錄傳送到 Firebase；匯入由使用者在網站上明確確認。
+- 分類、聊天、行動、思緒與假設分筆保存，回收桶大型項目拆成多個文件。交易以版本號防止多裝置靜默覆蓋。
+- 為維持單次交易的完整性，一次最多處理 450 筆變更；超過時停止並保留本機資料。大量初次匯入目前仍需後續批次匯入流程。
+- 載入雲端是明確操作，尚未提供遠端修改的即時推送；重新載入可取得新版本。
+- 本機快取及 JSON 匯出未做應用層加密。網站帳號隔離不等於端對端加密。
+- 未啟用 Analytics，也沒有升級付費方案。
+
+## 測試
+
+npm run check 與 npm test 檢查模組語法、功能、安全、資料編碼和帳號快取隔離。真實瀏覽器端登入與同步的驗證結果另外記錄於 PR；不得將模擬測試視為實際端到端測試。

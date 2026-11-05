@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "check": "node --check dist/app.js",
-    "test": "node tests/logic.test.cjs && node tests/security.test.cjs"
+    "check": "node --check dist/app.js && node --check dist/cloud-ui.js && node --check dist/firebase-cloud.mjs && node --check dist/cloud-codec.mjs",
+    "test": "node tests/logic.test.cjs && node tests/security.test.cjs && node tests/cloud-codec.test.mjs && node tests/cloud-ui.test.cjs"
   }
 }
