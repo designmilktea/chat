@@ -3,10 +3,10 @@ const nodes=new Map(),events={},registered=new Map(),storage=new Map();
 function node(id){if(!nodes.has(id))nodes.set(id,{id,innerHTML:'',textContent:'',value:'',className:'',open:false,classList:{add(){},remove(){}},append(){},focus(){},setSelectionRange(){},scrollTop:0,scrollHeight:100,addEventListener(n,fn){events[id+':'+n]=fn},querySelector(){return{focus(){}}},showModal(){this.open=true},close(){this.open=false}});return nodes.get(id)}
 const document={getElementById:node,querySelector(){return null},addEventListener(n,fn){events[n]=fn},createElement(){return{click(){},remove(){}}},modelContext:{registerTool(t){registered.set(t.name,t)}}};
 const context=vm.createContext({document,window:{addEventListener(){}},localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)},crypto:{randomUUID},Intl,Date,console,AbortController,structuredClone,setTimeout(){},clearTimeout(){},FormData:class{constructor(form){this.values=form.values||{}}get(k){return this.values[k]}},Blob,URL});
-vm.runInContext(fs.readFileSync('dist/cloud-ui.js','utf8'),context);vm.runInContext(fs.readFileSync('dist/app.js','utf8'),context);
+vm.runInContext(fs.readFileSync('dist/cloud-ui.js','utf8'),context);vm.runInContext('cloudGate=false',context);vm.runInContext(fs.readFileSync('dist/app.js','utf8'),context);
 const run=code=>vm.runInContext(code,context);
 (async()=>{await new Promise(r=>setImmediate(r));
-assert.equal(registered.size,0,'browser tools are disabled by default');await run('setAgentAccess([state.active],true)');assert.equal(registered.size,4,'explicitly permitted browser tools register');
+assert.equal(registered.size,0,'browser tools are disabled by default');await run('setAgentAccess([state.active],true)');assert.equal(registered.size,4,'explicitly permitted browser tools register');run('cloudGate=true');assert.throws(()=>registered.get('search_private_chats').execute({}),/sign in first/);run('cloudGate=false');
 assert.equal(run('db.categories.length'),6);
 const chatId=run('state.active');
 let result=await registered.get('search_private_chats').execute({keyword:'咖啡'});assert.equal(result.chats.length,1);
