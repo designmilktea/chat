@@ -36,3 +36,7 @@ Firebase Console → `chat-records-683bb` → Authentication → Settings → Au
 - GitHub Actions PR 的程式碼檢查與測試已通過。
 - GitHub Pages 部署尚未成功：未啟用 Pages，GitHub Actions 無法自行建立 Pages site。
 - Google 在 GitHub Pages 網域的登入尚未驗證，需設定 authorized domain。
+
+## 2026-11-06 設定完成後重新驗證
+
+使用者已確認 GitHub Pages Source 設為 GitHub Actions，並將 `designmilktea.github.io` 新增為 Firebase Authentication 授權網域。請依最新的 Actions 執行紀錄確認 Pages 是否已發布；完成發布後仍需驗證 Google 登入、Firestore 寫入與跨裝置讀取，不能僅憑部署成功即宣稱同步正常。
