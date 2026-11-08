@@ -14,6 +14,29 @@ function adoptCloudData(data,uid,base,{dirty=false}={}){if(cloudState.user?.uid!
 async function activateCloud(){if(cloudState.loading)return;cloudState.loading=true;cloudState.error='';cloudState.status='正在載入雲端…';refreshCloudView();const epoch=cloudState.epoch;try{const service=await ensureCloud(),base=await service.load();if(epoch!==cloudState.epoch||base.uid!==cloudState.user?.uid)throw Error('登入帳號已改變，請重新載入');let local=null;const raw=localStorage.getItem(LEGACY_KEY+':'+base.uid);if(raw){try{local=validateDatabase(JSON.parse(raw))}catch{throw Error('此帳號的本機快取異常，請先保留瀏覽器資料再處理。')}}const dirty=local?._cloud?.dirty===true;const data=dirty?local:base.data||seed();adoptCloudData(data,base.uid,base,{dirty});cloudState.paused=dirty&&local._cloud.revision!==base.revision;cloudState.status=cloudState.paused?'同步衝突，已保留本機':dirty?'已保留本機，等待同步':'已載入雲端紀錄';if(dirty&&!cloudState.paused)queueCloudSave(db);if(cloudState.paused)cloudState.error='其他裝置已更新資料。請先匯出本機備份，再重新載入雲端。'}catch(error){if(epoch===cloudState.epoch)throw error}finally{cloudState.loading=false;if(epoch!==cloudState.epoch&&cloudGate&&cloudState.user)void activateCloud().catch(showCloudError);refreshCloudView()}}
 function queueCloudSave(data){if(!cloudState.ready||!cloudState.user)return;cloudState.pending=structuredClone(data);cloudState.status='本機已儲存，等待同步';if(!cloudState.saving&&!cloudState.paused)void flushCloud().catch(showCloudError)}
 async function flushCloud(){if(cloudState.saving||cloudState.paused||!cloudState.ready)return;cloudState.saving=true;const epoch=cloudState.epoch;try{while(cloudState.pending){const snapshot=cloudState.pending;cloudState.pending=null;cloudState.status='正在同步…';refreshCloudView();let base;try{base=await cloudService.save(snapshot,cloudState.base)}catch(error){if(epoch!==cloudState.epoch)return;cloudState.pending=cloudState.pending||snapshot;cloudState.paused=true;throw error}if(epoch!==cloudState.epoch)return;cloudState.base=base;const dirty=Boolean(cloudState.pending);db._cloud={revision:base.revision,dirty};const currentRaw=localStorage.getItem(KEY);if(currentRaw!==lastRaw){cloudState.paused=true;throw Error('另一分頁已更新本機資料，請重新整理。')}const serialized=JSON.stringify(db);localStorage.setItem(KEY,serialized);lastRaw=serialized;rawStored=serialized;lastSaved=structuredClone(db);cloudState.status=dirty?'本機已儲存，等待同步':'已同步至雲端';cloudState.error=''}}finally{cloudState.saving=false;if(epoch!==cloudState.epoch&&cloudState.pending)void flushCloud().catch(showCloudError);refreshCloudView()}}
+// Safari requires popup creation to happen in the original user click task.
+function startGooglePopup(){
+ if(cloudState.busy)return;
+ if(!cloudService){
+   showCloudError(new Error('登入服務仍在初始化，請稍後再點一次 Google 登入。'));
+   return;
+ }
+ cloudState.busy=true;
+ cloudState.error='';
+ // Do not await anything before invoking signInWithPopup.
+ let attempt;
+ try { attempt=cloudService.login(); }
+ catch(error){cloudState.busy=false;showCloudError(error);return}
+ void Promise.resolve(attempt).catch(error=>{
+   if(error?.code==='auth/popup-blocked'){
+     showCloudError(new Error('Safari 阻擋了 Google 登入視窗。請允許此網站的彈出式視窗，再重新點選 Google 登入。'));
+   }else if(error?.code==='auth/popup-closed-by-user'){
+     showCloudError(new Error('Google 登入視窗已關閉；如尚未登入，請再試一次。'));
+   }else{
+     showCloudError(error);
+   }
+ }).finally(()=>{cloudState.busy=false;refreshCloudView()});
+}
 async function cloudAction(action){if(cloudState.busy)return;cloudState.busy=true;cloudState.error='';refreshCloudView();try{const service=await ensureCloud();if(action==='cloud-login'){await service.login();return}if(action==='cloud-load'){await activateCloud();return}if(action==='cloud-retry'){cloudState.paused=false;queueCloudSave(db);return}if(action==='cloud-logout'){if(cloudState.saving)throw Error('正在同步，請稍後再登出');await service.logout();cloudState.ready=false;cloudState.status='已登出';return}if(action==='cloud-import'){const raw=localStorage.getItem(LEGACY_KEY);if(!raw)throw Error('此瀏覽器沒有原本的本機紀錄');const data=validateDatabase(JSON.parse(raw));const base=await service.load();if(base.data)throw Error('此帳號已有雲端紀錄。請先匯出並整理資料，避免覆蓋既有紀錄。');downloadJson(raw,'匯入前本機紀錄備份.json');modal.close();openModal('匯入本機紀錄？',`<p>將 ${data.chats.length} 個聊天與其附著思緒、假設、分類及回收桶，存至 ${e(cloudState.user.email)} 的 Firebase 空間。</p><p>原本的本機資料與剛下載的備份會保留。</p>`,()=>{void (async()=>{adoptCloudData(data,base.uid,base,{dirty:true});queueCloudSave(db)})().catch(showCloudError)});return}if(action==='cloud-reload'){downloadJson(JSON.stringify(db,null,2),'重新載入前紀錄備份.json');const base=await service.load();if(!base.data)throw Error('雲端目前沒有紀錄');adoptCloudData(base.data,base.uid,base);cloudState.pending=null;cloudState.paused=false;cloudState.error='';cloudState.status='已重新載入雲端紀錄';return}}catch(error){showCloudError(error)}finally{cloudState.busy=false;refreshCloudView()}}
 
 document.addEventListener('change',async event=>{
