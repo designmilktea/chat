@@ -37,5 +37,17 @@ assert.equal(next.run('cloudState.base.uid'),'user-b');
 assert.equal(next.run('db._cloud.dirty'),false);
 assert.ok(!next.storage.get('minerva-room-v1:user-b').includes('a-private'));
 }
+// Popup must open synchronously in the original click handler on Safari.
+const safari=boot();
+safari.run("globalThis.popupStarts=0;cloudService={login(){popupStarts++;return Promise.resolve({user:{uid:'test'}})}};startGooglePopup()");
+assert.equal(safari.run('popupStarts'),1,'Google popup starts immediately without an await');
+await new Promise(setImmediate);
+assert.equal(safari.run('cloudState.busy'),false,'login busy state resets');
+const blocked=boot();
+blocked.run("cloudService={login(){return Promise.reject({code:'auth/popup-blocked'})}};startGooglePopup()");
+await new Promise(setImmediate);
+assert.match(blocked.run('cloudState.error'),/Safari 阻擋/);
+const appSource=fs.readFileSync('dist/app.js','utf8');
+assert.ok(appSource.includes("if(a==='cloud-login'){startGooglePopup();return}"),'click handler invokes popup directly');
 console.log('PASS: UID-specific caches, explicit migration, signout gating, legacy preservation, confirmed cloud status, offline retention and stale-account load/save isolation.');
 })().catch(e=>{console.error(e);process.exitCode=1});
