@@ -35,7 +35,7 @@ npm run build
 
 ## Firebase
 
-參見 FIREBASE_SETUP.md。Firebase 專案為 chat-records-683bb，資料庫位於台灣 asia-east1，使用免費 Spark 方案。firestore.rules 與 Console 已發布規則一致。匯入先下載本機備份並取得網站內確認；已有雲端紀錄時阻止匯入覆蓋。
+參見 FIREBASE_SETUP.md。Firebase 專案為 chat-records-683bb，資料庫位於台灣 asia-east1，使用免費 Spark 方案。repository 保留既有 firestore.rules；本次遷移未重新核驗 Console 已發布規則。匯入先下載本機備份並取得網站內確認；已有雲端紀錄時阻止匯入覆蓋。
 
 ## 驗證限制
 

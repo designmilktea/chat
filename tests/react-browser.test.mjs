@@ -171,12 +171,14 @@ try {
   await page.locator('#composer button[type="submit"]').click();
   await page.waitForFunction(() => document.querySelector('#draft')?.value === '');
   await page.locator('#draft').fill('合成測試：尚未送出的草稿。');
+  await page.locator('#draft').evaluate(el => el.setSelectionRange(5, 8));
   const until = Date.now() + 10000;
   while (!releaseCommit && Date.now() < until) await new Promise(resolve => setTimeout(resolve, 20));
   assert.ok(releaseCommit, 'save reaches held synthetic transaction');
   holdCommit = false; releaseCommit(); releaseCommit = undefined;
   await waitSaved(before);
   assert.equal(await page.locator('#draft').inputValue(), '合成測試：尚未送出的草稿。', 'sync completion preserves composer draft');
+  assert.deepEqual(await page.locator('#draft').evaluate(el => ({focused:document.activeElement===el,start:el.selectionStart,end:el.selectionEnd})), {focused:true,start:5,end:8}, 'sync completion preserves focus and selection');
 
   await click('msg-batch');
   await message.locator('[data-select-message]').check();
