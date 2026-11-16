@@ -4,11 +4,16 @@
 
 ## 使用與驗證
 
-目前是無建置步驟的靜態網站，透過靜態伺服器提供 dist/ 即可使用。不需要安裝 npm 套件。
+前端使用 React + TypeScript + Vite，後端沿用 Firebase Authentication 與 Firestore。
+
+`npm ci` 安裝鎖定依賴，`npm run dev` 啟動開發環境；`npm run build` 產生 `dist/`，由 GitHub Pages 發布於 `/chat/`。`dist/` 是產物，不直接編輯或提交。
+
+遷移範圍、UX 驗收表與發布限制見 [REACT_MIGRATION.md](docs/REACT_MIGRATION.md)。
 
 ```sh
 npm run check
 npm test
+npm run build
 ```
 
 - tests/logic.test.cjs：紀錄操作、搜尋篩選、分類設定、原位新增和刪除復原。
@@ -34,9 +39,11 @@ npm test
 
 ## 驗證限制
 
-預設測試使用 Node VM 與模擬 DOM/WebMCP registry；另有選擇性的真實 Chrome 登入持久性測試，使用虛構帳號與模擬 Auth Emulator 回覆，不存取正式使用者資料。測試範圍、登入更新與 OAuth 名稱調查詳見 [AUTHENTICATION.md](AUTHENTICATION.md)。不能視為完整安全稽核或真實 Google OAuth／Firestore 端到端測試。
+預設測試執行遷移後 runtime，使用 Node VM、React 靜態渲染與模擬 DOM/WebMCP registry；另有選擇性的真實 Chrome 登入持久性測試，使用虛構帳號與模擬 Auth Emulator 回覆，不存取正式使用者資料。測試範圍、登入更新與 OAuth 名稱調查詳見 [AUTHENTICATION.md](AUTHENTICATION.md)。不能視為完整安全稽核或真實 Google OAuth／Firestore 端到端測試。
 
 - tests/cloud-codec.test.mjs：雲端資料順序、父子關係、回收桶分段與差異更新。
 - tests/cloud-ui.test.cjs：依 UID 快取、登出鎖定、明確搬移、確認同步狀態與離線保留。
 - tests/firebase-cloud.test.mjs：local persistence 初始化、登入／登出、儲存失敗與 UID 讀寫隔離。
 - tests/browser-auth.test.mjs：選擇性的真實 SDK 瀏覽器關閉重開、多分頁與登出測試。
+
+`npm run test:browser` 對本機 React 網站執行合成資料瀏覽器回歸；不連接正式帳號或 Firestore。測試限制與手動發布門檻見遷移文件。

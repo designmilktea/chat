@@ -1,9 +1,10 @@
+const runtimeFixture=require('./runtime-fixture.cjs');
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict'),{randomUUID}=require('node:crypto');
 const nodes=new Map(),events={},registered=new Map(),storage=new Map();
 function node(id){if(!nodes.has(id))nodes.set(id,{id,innerHTML:'',textContent:'',value:'',className:'',open:false,classList:{add(){},remove(){}},append(){},focus(){},setSelectionRange(){},scrollTop:0,scrollHeight:100,addEventListener(n,fn){events[id+':'+n]=fn},querySelector(){return{focus(){}}},showModal(){this.open=true},close(){this.open=false}});return nodes.get(id)}
 const document={getElementById:node,querySelector(){return null},addEventListener(n,fn){events[n]=fn},createElement(){return{click(){},remove(){}}},modelContext:{registerTool(t){registered.set(t.name,t)}}};
-const context=vm.createContext({document,window:{addEventListener(){}},localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)},crypto:{randomUUID},Intl,Date,console,AbortController,structuredClone,setTimeout(){},clearTimeout(){},FormData:class{constructor(form){this.values=form.values||{}}get(k){return this.values[k]}},Blob,URL});
-vm.runInContext(fs.readFileSync('dist/cloud-ui.js','utf8'),context);vm.runInContext('cloudGate=false',context);vm.runInContext(fs.readFileSync('dist/app.js','utf8'),context);
+const context=vm.createContext({__render:runtimeFixture.render,document,window:{addEventListener(){}},localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)},crypto:{randomUUID},Intl,Date,console,AbortController,structuredClone,setTimeout(){},clearTimeout(){},FormData:class{constructor(form){this.values=form.values||{}}get(k){return this.values[k]}},Blob,URL});
+vm.runInContext(runtimeFixture.cloudSource,context);vm.runInContext('cloudGate=false',context);vm.runInContext(runtimeFixture.appSource,context);
 const run=code=>vm.runInContext(code,context);
 (async()=>{await new Promise(r=>setImmediate(r));
 assert.equal(registered.size,0,'browser tools are disabled by default');await run('setAgentAccess([state.active],true)');assert.equal(registered.size,4,'explicitly permitted browser tools register');run('cloudGate=true');assert.throws(()=>registered.get('search_private_chats').execute({}),/sign in first/);run('cloudGate=false');
@@ -37,8 +38,8 @@ run(`state.category=db.categories.find(c=>c.name==='健康').id`);assert.equal(r
 run(`state.category='';state.query='';state.date='2000-01'`);assert.equal(run('filteredChats().length'),0,'month filter');
 const c=await registered.get('open_private_chat').execute({chatId});assert.equal(c.id,chatId);
 assert.ok(storage.get('minerva-room-v1').includes('尚未確認'),'mutations persist');
-const css=fs.readFileSync('dist/style.css','utf8');assert.match(css,/\.thought\{[^}]*margin:18px 0 0 auto/,'all thoughts align right');
-const html=fs.readFileSync('dist/index.html','utf8');assert.match(html,/<dialog[^>]*aria-labelledby/);assert.match(html,/lang="zh-Hant"/);
+const css=fs.readFileSync('src/styles/cream.css','utf8');assert.match(css,/\.thought\{[^}]*margin:18px 0 0 auto/,'all thoughts align right');
+const html=(fs.readFileSync('index.html','utf8')+fs.readFileSync('vite.config.ts','utf8'));assert.match(html,/<dialog[^>]*aria-labelledby/);assert.match(html,/lang="zh-Hant"/);
 // Revised interaction and category workflows.
 assert.ok(!node('app').innerHTML.includes('A LITTLE SPACE'));
 assert.ok(!node('app').innerHTML.includes('只有你能看見的私人空間'));

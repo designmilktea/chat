@@ -3,8 +3,27 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "check": "node --check dist/app.js && node --check dist/cloud-ui.js && node --check dist/firebase-cloud.mjs && node --check dist/cloud-codec.mjs",
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "check": "tsc --noEmit && node --check src/infrastructure/firebase-cloud.mjs && node --check src/infrastructure/cloud-codec.mjs",
     "test": "node tests/logic.test.cjs && node tests/security.test.cjs && node tests/cloud-codec.test.mjs && node tests/cloud-ui.test.cjs && node --experimental-vm-modules tests/firebase-cloud.test.mjs",
-    "test:browser": "node tests/browser-auth.test.mjs"
-  }
+    "test:browser": "node tests/react-browser.test.mjs",
+    "test:auth": "node tests/browser-auth.test.mjs"
+  },
+  "dependencies": {
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.3.0",
+    "esbuild": "^0.28.2",
+    "playwright": "^1.65.1",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.8"
+  },
+  "type": "module"
 }

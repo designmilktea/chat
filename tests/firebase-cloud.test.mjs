@@ -1,11 +1,11 @@
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import vm from 'node:vm';
-import * as codec from '../dist/cloud-codec.mjs';
+import * as codec from '../src/infrastructure/cloud-codec.mjs';
 
 // Link the unchanged production module to SDK doubles: no credentials, network,
 // real sign-ins or Firestore writes are used by these regression tests.
-const source=await readFile(new URL('../dist/firebase-cloud.mjs',import.meta.url),'utf8');
+const source=await readFile(new URL('../src/infrastructure/firebase-cloud.mjs',import.meta.url),'utf8');
 function deferred(){let resolve,reject;const promise=new Promise((yes,no)=>{resolve=yes;reject=no});return{promise,resolve,reject}}
 const empty={version:1,categories:[{id:'category',name:'朋友'}],chats:[],trash:[],seededAt:'2026-11-07T00:00:00.000Z'};
 async function boot({persistence=Promise.resolve()}={}){
