@@ -31,7 +31,7 @@ const server=createServer(async(req,res)=>{
   res.setHeader('Content-Type','text/javascript');
   if(name==='/firebase-config.js'){res.end(config);return}
   if(!['/firebase-cloud.mjs','/cloud-codec.mjs'].includes(name)){res.writeHead(404);res.end();return}
-  res.end(await readFile(new URL('../dist'+name,import.meta.url)));
+  res.end(await readFile(new URL('../src/infrastructure'+name,import.meta.url)));
  }catch{res.writeHead(500);res.end()}
 });
 await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
